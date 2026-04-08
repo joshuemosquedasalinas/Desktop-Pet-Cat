@@ -54,4 +54,16 @@ extension CatAnimationClip {
             frameDurations: CatAnimationConfig.walkFrameDurations
         )
     }()
+
+    /// Sit cycle — temporary resting behavior.
+    static let sit: CatAnimationClip = {
+        CatAnimationClip(
+            name: "sit",
+            frames: CatSpriteLoader.loadStrip(
+                assetName: CatAnimationConfig.sitAsset,
+                frameCount: CatAnimationConfig.sitFrameCount
+            ),
+            frameDurations: CatAnimationConfig.sitFrameDurations
+        )
+    }()
 }

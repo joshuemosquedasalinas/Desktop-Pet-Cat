@@ -49,9 +49,11 @@ final class CatBehaviorController: ObservableObject {
             await runIdlePhase()
             guard !Task.isCancelled else { return }
 
-            if Double.random(in: 0..<1) < CatAnimationConfig.walkChance {
+            let roll = Double.random(in: 0..<1)
+            if roll < CatAnimationConfig.sitChance {
+                await runSitPhase()
+            } else if roll < (CatAnimationConfig.sitChance + CatAnimationConfig.walkChance) {
                 await runWalkPhase()
-                guard !Task.isCancelled else { return }
             }
         }
     }
@@ -125,6 +127,25 @@ final class CatBehaviorController: ObservableObject {
         state       = .idle
         facingRight = true
         currentFrame = CatAnimationClip.idle.frames[safe: 0]
+    }
+
+    // MARK: - Sit phase
+
+    private func runSitPhase() async {
+        state = .sit
+        let cycles = Int.random(in: CatAnimationConfig.sitCyclesMin...CatAnimationConfig.sitCyclesMax)
+
+        for _ in 0..<cycles {
+            guard !Task.isCancelled else { return }
+            await playClip(.sit)
+        }
+
+        // Occasionally transition to blink before returning to idle
+        if Double.random(in: 0..<1) < CatAnimationConfig.blinkVariationChance {
+            await playClip(.idleBlink)
+        }
+
+        state = .idle
     }
 
     // MARK: - Animation playback
