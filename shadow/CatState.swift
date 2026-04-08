@@ -4,4 +4,5 @@ enum CatState: Equatable {
     case idle
     case walkLeft
     case walkRight
+    case sit
 }

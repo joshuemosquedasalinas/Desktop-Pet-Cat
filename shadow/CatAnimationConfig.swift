@@ -65,4 +65,23 @@ enum CatAnimationConfig {
     /// How long (seconds) a walk episode lasts before returning to idle.
     static let walkDurationMin: TimeInterval = 1.5
     static let walkDurationMax: TimeInterval = 4.0
+
+    // MARK: - sit clip
+
+    static let sitAsset      = "cat05_sit_strip8"
+    static let sitFrameCount = 8
+
+    static let sitFrameDurations: [TimeInterval] = [
+        0.12, 0.12, 0.12, 0.12,
+        0.12, 0.12, 0.12, 0.12,
+    ]
+
+    // MARK: - Sit behavior
+
+    /// Probability that a sit episode follows an idle phase.
+    static let sitChance: Double = 0.20
+
+    /// How many full sit cycles to play before returning to idle.
+    static let sitCyclesMin = 2
+    static let sitCyclesMax = 5
 }
