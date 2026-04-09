@@ -20,6 +20,9 @@ final class CatBehaviorController: ObservableObject {
     /// Whether the sprite should face right. CatView flips horizontally when false.
     @Published private(set) var facingRight: Bool = true
 
+    /// Sprite-space vertical offset used for short aerial arcs without moving the whole window vertically.
+    @Published private(set) var verticalOffset: CGFloat = 0
+
     // MARK: - Private state
 
     private(set) var state: CatState = .idle
@@ -33,6 +36,7 @@ final class CatBehaviorController: ObservableObject {
     /// Call once from ContentView.onAppear after the window is ready.
     func start(motionProxy: WindowMotionProxy) {
         self.motionProxy = motionProxy
+        verticalOffset = 0
         behaviorTask?.cancel()
         behaviorTask = Task { [weak self] in
             await self?.runBehaviorLoop()
@@ -50,30 +54,48 @@ final class CatBehaviorController: ObservableObject {
             guard !Task.isCancelled else { return }
 
             let roll = Double.random(in: 0..<1)
-            if roll < CatAnimationConfig.dashChance {
-                await runDashPhase()
-            } else if roll < (CatAnimationConfig.dashChance + CatAnimationConfig.lieDownChance) {
+            if roll < CatAnimationConfig.lieDownChance {
                 await runLieDownPhase()
-            } else if roll < (CatAnimationConfig.dashChance
-                + CatAnimationConfig.lieDownChance
-                + CatAnimationConfig.sneakChance) {
-                await runSneakPhase()
-            } else if roll < (CatAnimationConfig.dashChance
-                + CatAnimationConfig.lieDownChance
-                + CatAnimationConfig.sneakChance
+            } else if roll < (CatAnimationConfig.lieDownChance
+                + CatAnimationConfig.crouchChance) {
+                await runCrouchPhase()
+            } else if roll < (CatAnimationConfig.lieDownChance
+                + CatAnimationConfig.crouchChance
                 + CatAnimationConfig.sitChance) {
                 await runSitPhase()
-            } else if roll < (CatAnimationConfig.dashChance
-                + CatAnimationConfig.lieDownChance
-                + CatAnimationConfig.sneakChance
+            } else if roll < (CatAnimationConfig.lieDownChance
+                + CatAnimationConfig.crouchChance
                 + CatAnimationConfig.sitChance
+                + CatAnimationConfig.sneakChance) {
+                await runSneakPhase()
+            } else if roll < (CatAnimationConfig.lieDownChance
+                + CatAnimationConfig.crouchChance
+                + CatAnimationConfig.sitChance
+                + CatAnimationConfig.sneakChance
+                + CatAnimationConfig.hopChance) {
+                await runHopPhase(preferredDirection: nil, origin: .idle)
+            } else if roll < (CatAnimationConfig.lieDownChance
+                + CatAnimationConfig.crouchChance
+                + CatAnimationConfig.sitChance
+                + CatAnimationConfig.sneakChance
+                + CatAnimationConfig.hopChance
                 + CatAnimationConfig.runChance) {
                 await runRunPhase()
-            } else if roll < (CatAnimationConfig.dashChance
-                + CatAnimationConfig.lieDownChance
-                + CatAnimationConfig.sneakChance
+            } else if roll < (CatAnimationConfig.lieDownChance
+                + CatAnimationConfig.crouchChance
                 + CatAnimationConfig.sitChance
+                + CatAnimationConfig.sneakChance
+                + CatAnimationConfig.hopChance
                 + CatAnimationConfig.runChance
+                + CatAnimationConfig.dashChance) {
+                await runDashPhase()
+            } else if roll < (CatAnimationConfig.lieDownChance
+                + CatAnimationConfig.crouchChance
+                + CatAnimationConfig.sitChance
+                + CatAnimationConfig.sneakChance
+                + CatAnimationConfig.hopChance
+                + CatAnimationConfig.runChance
+                + CatAnimationConfig.dashChance
                 + CatAnimationConfig.walkChance) {
                 await runWalkPhase()
             }
@@ -123,18 +145,103 @@ final class CatBehaviorController: ObservableObject {
         guard !Task.isCancelled else { return }
 
         let transitionRoll = Double.random(in: 0..<1)
-        if transitionRoll < CatAnimationConfig.walkToDashChance {
+        if transitionRoll < CatAnimationConfig.walkToHopChance {
+            await runHopPhase(preferredDirection: goRight, origin: .walk)
+            return
+        }
+
+        if transitionRoll < (CatAnimationConfig.walkToHopChance + CatAnimationConfig.walkToDashChance) {
             await runDashPhase(preferredDirection: goRight, resolution: .walk)
             return
         }
 
-        if transitionRoll < (CatAnimationConfig.walkToDashChance + CatAnimationConfig.walkToRunChance) {
+        if transitionRoll < (CatAnimationConfig.walkToHopChance
+            + CatAnimationConfig.walkToDashChance
+            + CatAnimationConfig.walkToRunChance) {
             await runRunPhase(preferredDirection: goRight, allowWalkCooldown: true)
+            return
+        }
+
+        if transitionRoll < (CatAnimationConfig.walkToHopChance
+            + CatAnimationConfig.walkToDashChance
+            + CatAnimationConfig.walkToRunChance
+            + CatAnimationConfig.walkToCrouchChance) {
+            await runCrouchPhase(preferredFacingRight: goRight, origin: .walk)
             return
         }
 
         // Snap back to idle rest frame before re-entering idle phase.
         settleToIdle()
+    }
+
+    // MARK: - Crouch phase
+
+    private func runCrouchPhase(
+        preferredFacingRight: Bool? = nil,
+        origin: CrouchOrigin = .idle
+    ) async {
+        state = .crouch
+        if let preferredFacingRight {
+            facingRight = preferredFacingRight
+        }
+
+        await playClip(.crouch)
+        guard !Task.isCancelled else { return }
+
+        currentFrame = CatAnimationClip.crouch.frames.last
+        let holdDuration = TimeInterval.random(
+            in: CatAnimationConfig.crouchHoldMin...CatAnimationConfig.crouchHoldMax
+        )
+        do { try await Task.sleep(for: .seconds(holdDuration)) } catch { return }
+        guard !Task.isCancelled else { return }
+
+        let roll = Double.random(in: 0..<1)
+
+        switch origin {
+        case .idle, .walk:
+            if roll < CatAnimationConfig.crouchToHopChance {
+                await runHopPhase(preferredDirection: facingRight, origin: .crouch)
+            } else if roll < (CatAnimationConfig.crouchToHopChance + CatAnimationConfig.crouchToSneakChance) {
+                await runSneakPhase(preferredDirection: facingRight, origin: .crouch)
+            } else if roll < (CatAnimationConfig.crouchToHopChance
+                + CatAnimationConfig.crouchToSneakChance
+                + CatAnimationConfig.crouchToLieDownChance) {
+                await runLieDownPhase()
+            } else if roll < (CatAnimationConfig.crouchToHopChance
+                + CatAnimationConfig.crouchToSneakChance
+                + CatAnimationConfig.crouchToLieDownChance
+                + CatAnimationConfig.crouchToSitChance) {
+                await runSitPhase()
+            } else {
+                settleToIdle()
+            }
+        case .sit:
+            if roll < 0.35 {
+                await runSneakPhase(preferredDirection: facingRight, origin: .crouch)
+            } else {
+                settleToIdle()
+            }
+        case .lieDown:
+            if roll < 0.55 {
+                await runSneakPhase(preferredDirection: facingRight, origin: .crouch)
+            } else if roll < 0.80 {
+                state = .sit
+                await playClip(.sit)
+                settleToIdle()
+            } else {
+                settleToIdle()
+            }
+        case .sneak:
+            if roll < 0.35 {
+                await runLieDownPhase()
+            } else if roll < 0.65 {
+                state = .sit
+                await playClip(.sit)
+                settleToIdle()
+            } else {
+                settleToIdle()
+            }
+        }
     }
 
     // MARK: - Sneak phase
@@ -161,11 +268,16 @@ final class CatBehaviorController: ObservableObject {
 
         switch origin {
         case .idle:
-            if roll < CatAnimationConfig.sneakToWalkChance {
+            if roll < CatAnimationConfig.sneakToHopChance {
+                await runHopPhase(preferredDirection: goRight, origin: .sneak)
+            } else if roll < (CatAnimationConfig.sneakToHopChance + CatAnimationConfig.sneakToWalkChance) {
                 await runWalkCooldownPhase(goRight: goRight)
-            } else if roll < (CatAnimationConfig.sneakToWalkChance + CatAnimationConfig.sneakToSitChance) {
+            } else if roll < (CatAnimationConfig.sneakToHopChance
+                + CatAnimationConfig.sneakToWalkChance
+                + CatAnimationConfig.sneakToSitChance) {
                 await runSitPhase()
-            } else if roll < (CatAnimationConfig.sneakToWalkChance
+            } else if roll < (CatAnimationConfig.sneakToHopChance
+                + CatAnimationConfig.sneakToWalkChance
                 + CatAnimationConfig.sneakToSitChance
                 + CatAnimationConfig.sneakToLieDownChance) {
                 await runLieDownPhase()
@@ -173,20 +285,28 @@ final class CatBehaviorController: ObservableObject {
                 settleToIdle()
             }
         case .sit:
-            if roll < 0.25 {
-                await runWalkCooldownPhase(goRight: goRight)
+            if roll < 0.45 {
+                await runCrouchPhase(preferredFacingRight: goRight, origin: .sneak)
+            } else if roll < 0.80 {
+                await runSitPhase()
             } else {
-                settleToIdle()
+                await runLieDownPhase()
             }
         case .lieDown:
-            if roll < 0.65 {
-                state = .sit
-                await playClip(.sit)
-                settleToIdle()
-            } else if roll < 0.85 {
-                await runWalkCooldownPhase(goRight: goRight)
+            if roll < 0.50 {
+                await runCrouchPhase(preferredFacingRight: goRight, origin: .sneak)
+            } else if roll < 0.75 {
+                await runLieDownPhase()
             } else {
-                settleToIdle()
+                await runSitPhase()
+            }
+        case .crouch:
+            if roll < 0.45 {
+                await runCrouchPhase(preferredFacingRight: goRight, origin: .sneak)
+            } else if roll < 0.75 {
+                await runLieDownPhase()
+            } else {
+                await runSitPhase()
             }
         }
     }
@@ -209,17 +329,72 @@ final class CatBehaviorController: ObservableObject {
         guard !Task.isCancelled else { return }
 
         let resolutionRoll = Double.random(in: 0..<1)
-        if resolutionRoll < CatAnimationConfig.runToDashChance {
+        if resolutionRoll < CatAnimationConfig.runToHopChance {
+            await runHopPhase(preferredDirection: goRight, origin: .run)
+        } else if resolutionRoll < (CatAnimationConfig.runToHopChance + CatAnimationConfig.runToDashChance) {
             await runDashPhase(preferredDirection: goRight, resolution: .run)
-        } else if allowWalkCooldown, resolutionRoll < (CatAnimationConfig.runToDashChance + CatAnimationConfig.runToWalkChance) {
+        } else if allowWalkCooldown, resolutionRoll < (CatAnimationConfig.runToHopChance
+            + CatAnimationConfig.runToDashChance
+            + CatAnimationConfig.runToWalkChance) {
             await runWalkCooldownPhase(goRight: goRight)
-        } else if resolutionRoll < (CatAnimationConfig.runToDashChance
+        } else if resolutionRoll < (CatAnimationConfig.runToHopChance
+            + CatAnimationConfig.runToDashChance
             + CatAnimationConfig.runToWalkChance
             + CatAnimationConfig.runToSitChance) {
             await runSitPhase()
         } else {
             settleToIdle()
         }
+    }
+
+    // MARK: - Hop phase
+
+    private func runHopPhase(
+        preferredDirection: Bool? = nil,
+        origin: HopOrigin = .idle
+    ) async {
+        guard let goRight = chooseMovementDirection(preferredDirection: preferredDirection) else { return }
+
+        let useExtendedFall = Double.random(in: 0..<1) < CatAnimationConfig.extendedFallChance
+        let fallIndices = useExtendedFall
+            ? CatAnimationConfig.extendedFallFrameIndices
+            : Array(0..<CatAnimationClip.fall.frameCount)
+        let fallOffsets = useExtendedFall
+            ? CatAnimationConfig.extendedFallVerticalOffsets
+            : CatAnimationConfig.fallVerticalOffsets
+
+        await playAerialClip(
+            .jump,
+            state: goRight ? .jumpRight : .jumpLeft,
+            goRight: goRight,
+            frameIndices: Array(0..<CatAnimationClip.jump.frameCount),
+            verticalOffsets: CatAnimationConfig.jumpVerticalOffsets,
+            speed: CatAnimationConfig.hopJumpSpeed
+        )
+        guard !Task.isCancelled else { return }
+
+        await playAerialClip(
+            .fall,
+            state: goRight ? .fallRight : .fallLeft,
+            goRight: goRight,
+            frameIndices: fallIndices,
+            verticalOffsets: fallOffsets,
+            speed: CatAnimationConfig.hopFallSpeed
+        )
+        guard !Task.isCancelled else { return }
+
+        await playAerialClip(
+            .land,
+            state: goRight ? .landRight : .landLeft,
+            goRight: goRight,
+            frameIndices: Array(0..<CatAnimationClip.land.frameCount),
+            verticalOffsets: CatAnimationConfig.landVerticalOffsets,
+            speed: CatAnimationConfig.hopLandSpeed
+        )
+        guard !Task.isCancelled else { return }
+
+        verticalOffset = 0
+        await resolveHopLanding(origin: origin, goRight: goRight)
     }
 
     // MARK: - Dash phase
@@ -259,18 +434,7 @@ final class CatBehaviorController: ObservableObject {
             if roll < CatAnimationConfig.dashFromIdleToWalkChance {
                 await runWalkCooldownPhase(goRight: goRight)
             } else if roll < (CatAnimationConfig.dashFromIdleToWalkChance + CatAnimationConfig.dashFromIdleToRunChance) {
-                let runDuration = TimeInterval.random(
-                    in: CatAnimationConfig.runDurationMin...CatAnimationConfig.runDurationMax
-                )
-                await runMovementEpisode(
-                    clip: .run,
-                    state: goRight ? .runRight : .runLeft,
-                    goRight: goRight,
-                    speed: CatAnimationConfig.runSpeed,
-                    duration: runDuration
-                )
-                guard !Task.isCancelled else { return }
-                settleToIdle()
+                await runRunPhase(preferredDirection: goRight, allowWalkCooldown: true)
             } else {
                 settleToIdle()
             }
@@ -303,6 +467,11 @@ final class CatBehaviorController: ObservableObject {
             await playClip(.sit)
         }
 
+        if Double.random(in: 0..<1) < CatAnimationConfig.sitToCrouchChance {
+            await runCrouchPhase(preferredFacingRight: facingRight, origin: .sit)
+            return
+        }
+
         if Double.random(in: 0..<1) < CatAnimationConfig.sitToSneakChance {
             await runSneakPhase(origin: .sit)
             return
@@ -318,8 +487,7 @@ final class CatBehaviorController: ObservableObject {
             await playClip(.idleBlink)
         }
 
-        state = .idle
-        currentFrame = CatAnimationClip.idle.frames[safe: 0]
+        settleToIdle()
     }
 
     // MARK: - Lie-down phase
@@ -349,6 +517,11 @@ final class CatBehaviorController: ObservableObject {
 
         guard !Task.isCancelled else { return }
 
+        if Double.random(in: 0..<1) < CatAnimationConfig.lieDownToCrouchChance {
+            await runCrouchPhase(preferredFacingRight: facingRight, origin: .lieDown)
+            return
+        }
+
         if Double.random(in: 0..<1) < CatAnimationConfig.lieDownToSneakChance {
             await runSneakPhase(origin: .lieDown)
             return
@@ -366,8 +539,7 @@ final class CatBehaviorController: ObservableObject {
             await playClip(.sit)
         }
 
-        state = .idle
-        currentFrame = CatAnimationClip.idle.frames[safe: 0]
+        settleToIdle()
     }
 
     // MARK: - Locomotion
@@ -417,6 +589,32 @@ final class CatBehaviorController: ObservableObject {
         }
     }
 
+    private func playAerialClip(
+        _ clip: CatAnimationClip,
+        state newState: CatState,
+        goRight: Bool,
+        frameIndices: [Int],
+        verticalOffsets: [CGFloat],
+        speed: CGFloat
+    ) async {
+        state = newState
+        facingRight = goRight
+
+        for (stepIndex, frameIndex) in frameIndices.enumerated() {
+            guard !Task.isCancelled else { return }
+            guard clip.frames.indices.contains(frameIndex) else { continue }
+
+            currentFrame = clip.frames[safe: frameIndex]
+            verticalOffset = verticalOffsets[safe: stepIndex] ?? 0
+
+            let frameDuration = clip.frameDurations[safe: frameIndex] ?? 0.1
+            let dx = speed * CGFloat(frameDuration) * (goRight ? 1 : -1)
+            _ = motionProxy?.move(dx: dx)
+
+            do { try await Task.sleep(for: .seconds(frameDuration)) } catch { return }
+        }
+    }
+
     private func playMovementClipOnce(
         clip: CatAnimationClip,
         state newState: CatState,
@@ -445,6 +643,7 @@ final class CatBehaviorController: ObservableObject {
     private func settleToIdle() {
         state = .idle
         facingRight = true
+        verticalOffset = 0
         currentFrame = CatAnimationClip.idle.frames[safe: 0]
     }
 
@@ -500,6 +699,59 @@ final class CatBehaviorController: ObservableObject {
         }
     }
 
+    private func resolveHopLanding(origin: HopOrigin, goRight: Bool) async {
+        let roll = Double.random(in: 0..<1)
+
+        switch origin {
+        case .idle:
+            if roll < CatAnimationConfig.hopFromIdleToWalkChance {
+                await runWalkCooldownPhase(goRight: goRight)
+            } else if roll < (CatAnimationConfig.hopFromIdleToWalkChance
+                + CatAnimationConfig.hopFromIdleToCrouchChance) {
+                await runCrouchPhase(preferredFacingRight: goRight, origin: .idle)
+            } else {
+                settleToIdleFacing(goRight)
+            }
+        case .walk:
+            if roll < CatAnimationConfig.hopFromWalkToWalkChance {
+                await runWalkCooldownPhase(goRight: goRight)
+            } else if roll < (CatAnimationConfig.hopFromWalkToWalkChance
+                + CatAnimationConfig.hopFromWalkToRunChance) {
+                await runRunPhase(preferredDirection: goRight, allowWalkCooldown: true)
+            } else {
+                settleToIdleFacing(goRight)
+            }
+        case .run:
+            if roll < CatAnimationConfig.hopFromRunToRunChance {
+                await runRunPhase(preferredDirection: goRight, allowWalkCooldown: true)
+            } else if roll < (CatAnimationConfig.hopFromRunToRunChance
+                + CatAnimationConfig.hopFromRunToWalkChance) {
+                await runWalkCooldownPhase(goRight: goRight)
+            } else {
+                settleToIdleFacing(goRight)
+            }
+        case .crouch:
+            if roll < CatAnimationConfig.hopFromCrouchToCrouchChance {
+                await runCrouchPhase(preferredFacingRight: goRight, origin: .idle)
+            } else {
+                settleToIdleFacing(goRight)
+            }
+        case .sneak:
+            if roll < CatAnimationConfig.hopFromSneakToCrouchChance {
+                await runCrouchPhase(preferredFacingRight: goRight, origin: .sneak)
+            } else {
+                settleToIdleFacing(goRight)
+            }
+        }
+    }
+
+    private func settleToIdleFacing(_ goRight: Bool) {
+        state = .idle
+        facingRight = goRight
+        verticalOffset = 0
+        currentFrame = CatAnimationClip.idle.frames[safe: 0]
+    }
+
     // MARK: - Animation playback
 
     /// Advances through every frame of `clip` at each frame's configured duration.
@@ -543,8 +795,25 @@ private enum DashResolution {
     case run
 }
 
+private enum HopOrigin {
+    case idle
+    case walk
+    case run
+    case crouch
+    case sneak
+}
+
 private enum SneakOrigin {
     case idle
     case sit
     case lieDown
+    case crouch
+}
+
+private enum CrouchOrigin {
+    case idle
+    case walk
+    case sit
+    case lieDown
+    case sneak
 }
