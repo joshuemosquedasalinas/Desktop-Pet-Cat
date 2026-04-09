@@ -67,6 +67,42 @@ extension CatAnimationClip {
         )
     }()
 
+    /// Jump launch — one-shot takeoff clip for short hops.
+    static let jump: CatAnimationClip = {
+        CatAnimationClip(
+            name: "jump",
+            frames: CatSpriteLoader.loadStrip(
+                assetName: CatAnimationConfig.jumpAsset,
+                frameCount: CatAnimationConfig.jumpFrameCount
+            ),
+            frameDurations: CatAnimationConfig.jumpFrameDurations
+        )
+    }()
+
+    /// Fall descent — brief airborne bridge between launch and landing.
+    static let fall: CatAnimationClip = {
+        CatAnimationClip(
+            name: "fall",
+            frames: CatSpriteLoader.loadStrip(
+                assetName: CatAnimationConfig.fallAsset,
+                frameCount: CatAnimationConfig.fallFrameCount
+            ),
+            frameDurations: CatAnimationConfig.fallFrameDurations
+        )
+    }()
+
+    /// Land recovery — one-shot touchdown that resolves back to grounded behavior.
+    static let land: CatAnimationClip = {
+        CatAnimationClip(
+            name: "land",
+            frames: CatSpriteLoader.loadStrip(
+                assetName: CatAnimationConfig.landAsset,
+                frameCount: CatAnimationConfig.landFrameCount
+            ),
+            frameDurations: CatAnimationConfig.landFrameDurations
+        )
+    }()
+
     /// Run cycle — higher-energy locomotion burst.
     static let run: CatAnimationClip = {
         CatAnimationClip(
@@ -88,6 +124,18 @@ extension CatAnimationClip {
                 frameCount: CatAnimationConfig.dashFrameCount
             ),
             frameDurations: CatAnimationConfig.dashFrameDurations
+        )
+    }()
+
+    /// Crouch posture — compressed low-to-the-ground calm state.
+    static let crouch: CatAnimationClip = {
+        CatAnimationClip(
+            name: "crouch",
+            frames: CatSpriteLoader.loadStrip(
+                assetName: CatAnimationConfig.crouchAsset,
+                frameCount: CatAnimationConfig.crouchFrameCount
+            ),
+            frameDurations: CatAnimationConfig.crouchFrameDurations
         )
     }()
 

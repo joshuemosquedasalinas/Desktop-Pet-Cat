@@ -81,23 +81,22 @@ enum CatAnimationConfig {
 
     // MARK: - Sneak behavior
 
-    /// Probability that a sneak episode follows an idle phase. Lower than walk.
-    static let sneakChance: Double = 0.08
-
     /// How long a sneak episode lasts before resolving.
     static let sneakDurationMin: TimeInterval = 1.0
     static let sneakDurationMax: TimeInterval = 2.3
 
-    /// Resolution mix after a sneak episode.
-    static let sneakToWalkChance: Double = 0.22
-    static let sneakToSitChance: Double = 0.20
-    static let sneakToLieDownChance: Double = 0.14
+    /// Probability that a sneak episode follows an idle phase.
+    static let sneakChance: Double = 0.08
 
     /// Probability that sit resolves into a brief sneak episode.
-    static let sitToSneakChance: Double = 0.10
+    static let sitToSneakChance: Double = 0.05
 
     /// Probability that lie-down resolves into a low crawl instead of sleep or sit.
     static let lieDownToSneakChance: Double = 0.12
+    static let crouchToSneakChance: Double = 0.24
+    static let sneakToWalkChance: Double = 0.25
+    static let sneakToSitChance: Double = 0.25
+    static let sneakToLieDownChance: Double = 0.20
 
     /// Probability that a completed walk burst escalates into a short run burst.
     static let walkToRunChance: Double = 0.22
@@ -106,6 +105,65 @@ enum CatAnimationConfig {
     /// Duration of the calmer walk cooldown after a run resolves into walking.
     static let walkCooldownDurationMin: TimeInterval = 0.8
     static let walkCooldownDurationMax: TimeInterval = 1.6
+
+    // MARK: - aerial clips
+
+    static let jumpAsset      = "cat05_jump_strip4"
+    static let jumpFrameCount = 4
+
+    static let jumpFrameDurations: [TimeInterval] = [
+        0.06, 0.07, 0.08, 0.08,
+    ]
+
+    static let fallAsset      = "cat05_fall_strip3"
+    static let fallFrameCount = 3
+
+    static let fallFrameDurations: [TimeInterval] = [
+        0.07, 0.08, 0.09,
+    ]
+
+    static let landAsset      = "cat05_land_strip2"
+    static let landFrameCount = 2
+
+    static let landFrameDurations: [TimeInterval] = [
+        0.08, 0.11,
+    ]
+
+    // MARK: - Hop behavior
+
+    /// Probability that a hop episode follows an idle phase.
+    static let hopChance: Double = 0.05
+
+    /// Probabilities that grounded locomotion and low postures spike into a hop.
+    static let walkToHopChance: Double = 0.11
+    static let runToHopChance: Double = 0.10
+    static let crouchToHopChance: Double = 0.14
+    static let sneakToHopChance: Double = 0.08
+
+    /// Per-phase horizontal speed for the hop sequence.
+    static let hopJumpSpeed: CGFloat = 118
+    static let hopFallSpeed: CGFloat = 92
+    static let hopLandSpeed: CGFloat = 46
+
+    /// Deterministic sprite-space arc for launch, descent, and recovery.
+    static let jumpVerticalOffsets: [CGFloat] = [-8, -18, -28, -22]
+    static let fallVerticalOffsets: [CGFloat] = [-16, -9, -4]
+    static let landVerticalOffsets: [CGFloat] = [-2, 0]
+
+    /// Occasionally extend the fall slightly so the arc does not feel identical every time.
+    static let extendedFallChance: Double = 0.35
+    static let extendedFallVerticalOffsets: [CGFloat] = [-16, -10, -6, -3]
+    static let extendedFallFrameIndices: [Int] = [0, 1, 2, 2]
+
+    /// Landing resolutions by origin.
+    static let hopFromIdleToWalkChance: Double = 0.22
+    static let hopFromIdleToCrouchChance: Double = 0.18
+    static let hopFromWalkToWalkChance: Double = 0.45
+    static let hopFromWalkToRunChance: Double = 0.14
+    static let hopFromRunToRunChance: Double = 0.30
+    static let hopFromRunToWalkChance: Double = 0.24
+    static let hopFromCrouchToCrouchChance: Double = 0.22
+    static let hopFromSneakToCrouchChance: Double = 0.34
 
     // MARK: - run clip
 
@@ -151,12 +209,42 @@ enum CatAnimationConfig {
 
     // MARK: - Dash behavior
 
-    /// Probability that a dash episode follows an idle phase. Lower than run.
+    /// Probability that a dash episode follows an idle phase.
     static let dashChance: Double = 0.03
+    static let dashFromIdleToWalkChance: Double = 0.45
+    static let dashFromIdleToRunChance: Double = 0.25
 
-    /// How a dash resolves when triggered directly from idle.
-    static let dashFromIdleToWalkChance: Double = 0.20
-    static let dashFromIdleToRunChance: Double = 0.10
+    // MARK: - crouch clip
+
+    static let crouchAsset      = "cat05_crouch_strip8"
+    static let crouchFrameCount = 8
+
+    static let crouchFrameDurations: [TimeInterval] = [
+        0.09, 0.09, 0.09, 0.10,
+        0.10, 0.10, 0.11, 0.12,
+    ]
+
+    // MARK: - Crouch behavior
+
+    /// Probability that a crouch episode follows an idle phase.
+    static let crouchChance: Double = 0.09
+
+    /// Probability that walk decompresses into crouch before settling.
+    static let walkToCrouchChance: Double = 0.14
+
+    /// Probability that sit compresses further into crouch.
+    static let sitToCrouchChance: Double = 0.16
+
+    /// Probability that lie-down resolves through crouch instead of sneak/sleep/sit.
+    static let lieDownToCrouchChance: Double = 0.18
+
+    /// How long to hold the final crouched frame before resolving.
+    static let crouchHoldMin: TimeInterval = 0.5
+    static let crouchHoldMax: TimeInterval = 1.2
+
+    /// Resolution mix after a crouch episode.
+    static let crouchToLieDownChance: Double = 0.18
+    static let crouchToSitChance: Double = 0.16
 
     // MARK: - sit clip
 

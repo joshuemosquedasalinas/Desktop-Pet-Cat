@@ -17,6 +17,7 @@ struct CatView: View {
                         height: CatAnimationConfig.frameSize.height * CatAnimationConfig.displayScale
                     )
                     .scaleEffect(x: controller.facingRight ? 1 : -1, y: 1)
+                    .offset(y: controller.verticalOffset)
             }
         }
     }
