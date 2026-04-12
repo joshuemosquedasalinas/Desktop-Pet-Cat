@@ -447,8 +447,8 @@ enum CatAnimationConfig {
         static let jumpVerticalOffsets: [CGFloat]  = [-6, -12, -18, -12]
         static let jumpVerticalMoves: [CGFloat]    = [4, 8, 10, 6]
         static let fallSpeed: CGFloat              = 96
-        static let fallVerticalOffsets: [CGFloat]  = [-8, 8, 28, 54, 82, 112, 140, 166]
-        static let fallVerticalMoves: [CGFloat]    = [-16, -28, -44, -62, -84, -106, -130, -150]
+        static let fallVerticalOffsets: [CGFloat]  = [-8, -4, 0, 4, 8, 8, 8, 8]
+        static let fallVerticalMoves: [CGFloat]    = [-16, -40, -60, -84, -108, -136, -158, -176]
         static let fallFrameIndices: [Int]         = [0, 1, 2, 2, 2, 2, 2, 2]
         static let landSpeed: CGFloat              = 40
     }
@@ -506,8 +506,8 @@ enum CatAnimationConfig {
         static let jumpOffVerticalOffsets: [CGFloat]  = [-4, -14, -24, -18]
         static let jumpOffVerticalMoves: [CGFloat]    = [8, 16, 24, 14]
         static let fallSpeed: CGFloat                 = 110
-        static let fallVerticalOffsets: [CGFloat]     = [-8, 4, 18, 34, 52, 70, 88, 104]
-        static let fallVerticalMoves: [CGFloat]       = [-18, -30, -42, -56, -70, -84, -96, -110]
+        static let fallVerticalOffsets: [CGFloat]     = [-8, -4, 0, 4, 8, 8, 8, 8]
+        static let fallVerticalMoves: [CGFloat]       = [-18, -38, -52, -68, -84, -102, -114, -126]
         static let fallFrameIndices: [Int]            = [0, 1, 2, 2, 2, 2, 2, 2]
         static let landSpeed: CGFloat                 = 44
     }
