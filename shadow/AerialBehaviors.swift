@@ -18,21 +18,21 @@ enum AerialBehaviors {
         guard let goRight = LocomotionBehaviors.chooseMovementDirection(context: context, preferredDirection: preferredDirection) else { return }
 
         let useExtendedFall = Double.random(in: 0..<1) < CatAnimationConfig.Hop.extendedFallChance
-        let fallIndices = useExtendedFall ? CatAnimationConfig.Hop.extendedFallFrameIndices : Array(0..<CatAnimationClip.fall.frameCount)
+        let fallIndices = useExtendedFall ? CatAnimationConfig.Hop.extendedFallFrameIndices : Array(0..<context.clips.fall.frameCount)
         let fallOffsets = useExtendedFall ? CatAnimationConfig.Hop.extendedFallVerticalOffsets : CatAnimationConfig.Hop.fallVerticalOffsets
 
         await context.player.playAerialClip(
-            clip: .jump,
+            clip: context.clips.jump,
             state: goRight ? .jumpRight : .jumpLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.jump.frameCount),
+            frameIndices: Array(0..<context.clips.jump.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.jumpVerticalOffsets,
             speed: CatAnimationConfig.Hop.jumpSpeed
         )
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .fall,
+            clip: context.clips.fall,
             state: goRight ? .fallRight : .fallLeft,
             goRight: goRight,
             frameIndices: fallIndices,
@@ -42,10 +42,10 @@ enum AerialBehaviors {
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .land,
+            clip: context.clips.land,
             state: goRight ? .landRight : .landLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.land.frameCount),
+            frameIndices: Array(0..<context.clips.land.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.landVerticalOffsets,
             speed: CatAnimationConfig.Hop.landSpeed
         )
@@ -78,7 +78,7 @@ enum AerialBehaviors {
         let holdCycles = Int.random(in: CatAnimationConfig.WallGrab.holdCyclesMin...CatAnimationConfig.WallGrab.holdCyclesMax)
         for _ in 0..<holdCycles {
             guard !Task.isCancelled else { return }
-            await context.player.playClip(.wallGrab)
+            await context.player.playClip(context.clips.wallGrab)
         }
         guard !Task.isCancelled else { return }
 
@@ -110,11 +110,11 @@ enum AerialBehaviors {
         let deadline = Date().addingTimeInterval(duration)
 
         climbLoop: while !Task.isCancelled, Date() < deadline {
-            for index in 0..<CatAnimationClip.wallClimb.frameCount {
+            for index in 0..<context.clips.wallClimb.frameCount {
                 guard !Task.isCancelled, Date() < deadline else { break climbLoop }
 
-                context.updateFrame(CatAnimationClip.wallClimb.frames[index])
-                let frameDuration = CatAnimationClip.wallClimb.frameDurations[index]
+                context.updateFrame(context.clips.wallClimb.frames[index])
+                let frameDuration = context.clips.wallClimb.frameDurations[index]
                 let dy = CatAnimationConfig.WallClimb.speed * CGFloat(frameDuration)
 
                 if !context.motionProxy.move(dy: dy) {
@@ -142,10 +142,10 @@ enum AerialBehaviors {
         let jumpAwayRight = !wallFacingRight
 
         await context.player.playWallAerialPhase(
-            clip: .jump,
+            clip: context.clips.jump,
             state: jumpAwayRight ? .jumpRight : .jumpLeft,
             goRight: jumpAwayRight,
-            frameIndices: Array(0..<CatAnimationClip.jump.frameCount),
+            frameIndices: Array(0..<context.clips.jump.frameCount),
             spriteVerticalOffsets: CatAnimationConfig.WallClimb.jumpOffVerticalOffsets,
             windowVerticalMoves: CatAnimationConfig.WallClimb.jumpOffVerticalMoves,
             horizontalSpeed: CatAnimationConfig.WallClimb.jumpOffSpeed
@@ -153,7 +153,7 @@ enum AerialBehaviors {
         guard !Task.isCancelled else { return }
 
         await context.player.playWallAerialPhase(
-            clip: .fall,
+            clip: context.clips.fall,
             state: jumpAwayRight ? .fallRight : .fallLeft,
             goRight: jumpAwayRight,
             frameIndices: CatAnimationConfig.WallClimb.fallFrameIndices,
@@ -164,10 +164,10 @@ enum AerialBehaviors {
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .land,
+            clip: context.clips.land,
             state: jumpAwayRight ? .landRight : .landLeft,
             goRight: jumpAwayRight,
-            frameIndices: Array(0..<CatAnimationClip.land.frameCount),
+            frameIndices: Array(0..<context.clips.land.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.landVerticalOffsets,
             speed: CatAnimationConfig.WallClimb.landSpeed
         )
@@ -188,10 +188,10 @@ enum AerialBehaviors {
             guard !Task.isCancelled else { return }
 
             await context.player.playWallAerialPhase(
-                clip: .jump,
+                clip: context.clips.jump,
                 state: goRight ? .jumpRight : .jumpLeft,
                 goRight: goRight,
-                frameIndices: Array(0..<CatAnimationClip.jump.frameCount),
+                frameIndices: Array(0..<context.clips.jump.frameCount),
                 spriteVerticalOffsets: CatAnimationConfig.SkyClimb.jumpVerticalOffsets,
                 windowVerticalMoves: CatAnimationConfig.SkyClimb.jumpVerticalMoves,
                 horizontalSpeed: CatAnimationConfig.SkyClimb.jumpSpeed
@@ -215,10 +215,10 @@ enum AerialBehaviors {
         let goRight = LocomotionBehaviors.chooseMovementDirection(context: context, preferredDirection: nil) ?? context.currentFacingRight
 
         await context.player.playWallAerialPhase(
-            clip: .jump,
+            clip: context.clips.jump,
             state: goRight ? .jumpRight : .jumpLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.jump.frameCount),
+            frameIndices: Array(0..<context.clips.jump.frameCount),
             spriteVerticalOffsets: CatAnimationConfig.SkyDescent.jumpVerticalOffsets,
             windowVerticalMoves: CatAnimationConfig.SkyDescent.jumpVerticalMoves,
             horizontalSpeed: CatAnimationConfig.SkyDescent.jumpSpeed
@@ -226,7 +226,7 @@ enum AerialBehaviors {
         guard !Task.isCancelled else { return }
 
         await context.player.playWallAerialPhase(
-            clip: .fall,
+            clip: context.clips.fall,
             state: goRight ? .fallRight : .fallLeft,
             goRight: goRight,
             frameIndices: CatAnimationConfig.SkyDescent.fallFrameIndices,
@@ -237,10 +237,10 @@ enum AerialBehaviors {
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .land,
+            clip: context.clips.land,
             state: goRight ? .landRight : .landLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.land.frameCount),
+            frameIndices: Array(0..<context.clips.land.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.landVerticalOffsets,
             speed: CatAnimationConfig.SkyDescent.landSpeed
         )

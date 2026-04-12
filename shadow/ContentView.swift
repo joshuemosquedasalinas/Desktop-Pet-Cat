@@ -27,6 +27,17 @@ struct ContentView: View {
                             if isHovering { Image(systemName: "checkmark") }
                         }
                     }
+                    Divider()
+                    ForEach(CatVariant.allCases, id: \.self) { variant in
+                        Button(action: { behaviorController.switchVariant(variant) }) {
+                            HStack {
+                                Text(variant.displayName)
+                                if behaviorController.currentVariant == variant {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
                 }
             // Name label overlaid in the transparent zone at the top of the sprite,
             // just above the cat's head. Adjust nameBarHeight to nudge up or down.

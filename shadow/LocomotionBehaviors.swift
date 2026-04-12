@@ -12,7 +12,7 @@ enum LocomotionBehaviors {
             in: CatAnimationConfig.Walk.durationMin...CatAnimationConfig.Walk.durationMax
         )
         await context.player.playMovementEpisode(
-            clip: .walk,
+            clip: context.clips.walk,
             state: goRight ? .walkRight : .walkLeft,
             goRight: goRight,
             speed: CatAnimationConfig.Walk.speed,
@@ -52,7 +52,7 @@ enum LocomotionBehaviors {
         let runSpeedMultiplier: CGFloat = isTurboRun ? CatAnimationConfig.Run.Turbo.speedMultiplier : 1
 
         await context.player.playMovementEpisode(
-            clip: .run,
+            clip: context.clips.run,
             state: goRight ? .runRight : .runLeft,
             goRight: goRight,
             speed: CatAnimationConfig.Run.speed * runSpeedMultiplier,
@@ -64,8 +64,8 @@ enum LocomotionBehaviors {
             // Turbo skid is basically Fright but resolves to Crouch
             context.updateState(.fright)
             context.updateFacingRight(goRight)
-            await context.player.playClip(.fright)
-            context.updateFrame(CatAnimationClip.fright.frames.last)
+            await context.player.playClip(context.clips.fright)
+            context.updateFrame(context.clips.fright.frames.last)
             try? await Task.sleep(for: .seconds(0.18))
             await onTransition(.crouch(preferredFacingRight: goRight, origin: .walk))
             return
@@ -103,7 +103,7 @@ enum LocomotionBehaviors {
             in: CatAnimationConfig.Sneak.durationMin...CatAnimationConfig.Sneak.durationMax
         )
         await context.player.playMovementEpisode(
-            clip: .sneak,
+            clip: context.clips.sneak,
             state: goRight ? .sneakRight : .sneakLeft,
             goRight: goRight,
             speed: CatAnimationConfig.Sneak.speed,
@@ -136,7 +136,7 @@ enum LocomotionBehaviors {
         guard let goRight = chooseMovementDirection(context: context, preferredDirection: preferredDirection) else { return }
 
         await context.player.playMovementClipOnce(
-            clip: .dash,
+            clip: context.clips.dash,
             state: goRight ? .dashRight : .dashLeft,
             goRight: goRight,
             speed: CatAnimationConfig.Dash.speed
@@ -168,30 +168,30 @@ enum LocomotionBehaviors {
         onTransition: (CatBehaviorRequest) async -> Void
     ) async {
         await context.player.playAerialClip(
-            clip: .jump,
+            clip: context.clips.jump,
             state: goRight ? .jumpRight : .jumpLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.jump.frameCount),
+            frameIndices: Array(0..<context.clips.jump.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.jumpVerticalOffsets,
             speed: CatAnimationConfig.Run.ComboLeap.jumpSpeed
         )
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .fall,
+            clip: context.clips.fall,
             state: goRight ? .fallRight : .fallLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.fall.frameCount),
+            frameIndices: Array(0..<context.clips.fall.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.fallVerticalOffsets,
             speed: CatAnimationConfig.Run.ComboLeap.fallSpeed
         )
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .land,
+            clip: context.clips.land,
             state: goRight ? .landRight : .landLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.land.frameCount),
+            frameIndices: Array(0..<context.clips.land.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.landVerticalOffsets,
             speed: CatAnimationConfig.Run.ComboLeap.landSpeed
         )
@@ -204,7 +204,7 @@ enum LocomotionBehaviors {
         )
         context.updateFacingRight(goRight)
         await context.player.playMovementEpisode(
-            clip: .crouch,
+            clip: context.clips.crouch,
             state: .crouch,
             goRight: goRight,
             speed: CatAnimationConfig.Run.Slide.speed,
@@ -224,7 +224,7 @@ enum LocomotionBehaviors {
     ) async {
         context.updateFacingRight(goRight)
         await context.player.playMovementEpisode(
-            clip: .crouch,
+            clip: context.clips.crouch,
             state: .crouch,
             goRight: goRight,
             speed: CatAnimationConfig.Run.Slide.speed,
@@ -233,30 +233,30 @@ enum LocomotionBehaviors {
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .jump,
+            clip: context.clips.jump,
             state: goRight ? .jumpRight : .jumpLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.jump.frameCount),
+            frameIndices: Array(0..<context.clips.jump.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.jumpVerticalOffsets,
             speed: CatAnimationConfig.Run.SlideAttack.jumpSpeed
         )
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .fall,
+            clip: context.clips.fall,
             state: goRight ? .fallRight : .fallLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.fall.frameCount),
+            frameIndices: Array(0..<context.clips.fall.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.fallVerticalOffsets,
             speed: CatAnimationConfig.Run.SlideAttack.fallSpeed
         )
         guard !Task.isCancelled else { return }
 
         await context.player.playAerialClip(
-            clip: .land,
+            clip: context.clips.land,
             state: goRight ? .landRight : .landLeft,
             goRight: goRight,
-            frameIndices: Array(0..<CatAnimationClip.land.frameCount),
+            frameIndices: Array(0..<context.clips.land.frameCount),
             verticalOffsets: CatAnimationConfig.Hop.landVerticalOffsets,
             speed: CatAnimationConfig.Run.SlideAttack.landSpeed
         )
@@ -272,7 +272,7 @@ enum LocomotionBehaviors {
             in: CatAnimationConfig.Run.walkCooldownDurationMin...CatAnimationConfig.Run.walkCooldownDurationMax
         )
         await context.player.playMovementEpisode(
-            clip: .walk,
+            clip: context.clips.walk,
             state: goRight ? .walkRight : .walkLeft,
             goRight: goRight,
             speed: CatAnimationConfig.Walk.speed,

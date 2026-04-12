@@ -12,21 +12,34 @@ final class CatBehaviorController: ObservableObject, CatBehaviorContext {
     @Published private(set) var currentFrame: NSImage?
     @Published private(set) var facingRight: Bool = true
     @Published private(set) var verticalOffset: CGFloat = 0
+    @Published private(set) var currentVariant: CatVariant
 
     // MARK: - Internal state
 
     private(set) var state: CatState = .idle
+    private(set) var clips: CatClips
     var lastMouseReactionAt: Date = .distantPast
 
     private var _motionProxy: WindowMotionProxy?
     private var behaviorTask: Task<Void, Never>?
 
+    private static let variantDefaultsKey = "catVariant"
+
     lazy var player: AnimationPlayer = { AnimationPlayer(context: self) }()
+
+    // MARK: - Init
+
+    init() {
+        let saved = UserDefaults.standard.string(forKey: Self.variantDefaultsKey)
+            .flatMap(CatVariant.init(rawValue:)) ?? .black
+        currentVariant = saved
+        clips = CatClips.load(for: saved)
+    }
 
     // MARK: - CatBehaviorContext
 
     var motionProxy: WindowMotionProxy {
-        _motionProxy ?? WindowMotionProxy() // Should always be set before the loop starts
+        _motionProxy ?? WindowMotionProxy()
     }
 
     var currentFacingRight: Bool { facingRight }
@@ -40,14 +53,25 @@ final class CatBehaviorController: ObservableObject, CatBehaviorContext {
     func settleToIdle() {
         state = .idle
         verticalOffset = 0
-        currentFrame = CatAnimationClip.idle.frames.first
+        currentFrame = clips.idle.frames.first
     }
 
     func settleToIdleFacing(_ goRight: Bool) {
         state = .idle
         facingRight = goRight
         verticalOffset = 0
-        currentFrame = CatAnimationClip.idle.frames.first
+        currentFrame = clips.idle.frames.first
+    }
+
+    // MARK: - Variant switching
+
+    func switchVariant(_ variant: CatVariant) {
+        UserDefaults.standard.set(variant.rawValue, forKey: Self.variantDefaultsKey)
+        currentVariant = variant
+        clips = CatClips.load(for: variant)
+        if let proxy = _motionProxy {
+            start(motionProxy: proxy)
+        }
     }
 
     // MARK: - Lifecycle
