@@ -11,6 +11,7 @@ enum CatAnimationConfig {
     enum Render {
         static let frameSize     = CGSize(width: 40, height: 40)
         static let displayScale: CGFloat = 4   // renders at 160×160 pt
+        static let nameBarHeight: CGFloat = 20
     }
 
     // MARK: - Mouse interaction
