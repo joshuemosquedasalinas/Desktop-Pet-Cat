@@ -15,211 +15,55 @@ struct CatAnimationClip {
     var frameCount: Int { frames.count }
 }
 
-// MARK: - Built-in clips
+// MARK: - CatClips
 
-extension CatAnimationClip {
+/// A full set of animation clips for one cat color variant.
+struct CatClips {
+    let idle:      CatAnimationClip
+    let idleBlink: CatAnimationClip
+    let walk:      CatAnimationClip
+    let sneak:     CatAnimationClip
+    let run:       CatAnimationClip
+    let dash:      CatAnimationClip
+    let crouch:    CatAnimationClip
+    let sit:       CatAnimationClip
+    let lieDown:   CatAnimationClip
+    let sleep:     CatAnimationClip
+    let attack:    CatAnimationClip
+    let fright:    CatAnimationClip
+    let jump:      CatAnimationClip
+    let fall:      CatAnimationClip
+    let land:      CatAnimationClip
+    let wallGrab:  CatAnimationClip
+    let wallClimb: CatAnimationClip
 
-    /// Subtle looping body animation — the default resting state.
-    static let idle: CatAnimationClip = {
-        CatAnimationClip(
-            name: "idle",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Idle.asset,
-                frameCount: CatAnimationConfig.Idle.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Idle.frameDurations
+    static func load(for variant: CatVariant) -> CatClips {
+        func strip(_ asset: SpriteAsset, _ count: Int, _ durations: [TimeInterval]) -> CatAnimationClip {
+            CatAnimationClip(
+                name: asset.rawValue,
+                frames: CatSpriteLoader.loadStrip(asset: asset, variant: variant, frameCount: count),
+                frameDurations: durations
+            )
+        }
+
+        return CatClips(
+            idle:      strip(.idle,      CatAnimationConfig.Idle.frameCount,          CatAnimationConfig.Idle.frameDurations),
+            idleBlink: strip(.idleBlink, CatAnimationConfig.Idle.Blink.frameCount,    CatAnimationConfig.Idle.Blink.frameDurations),
+            walk:      strip(.walk,      CatAnimationConfig.Walk.frameCount,          CatAnimationConfig.Walk.frameDurations),
+            sneak:     strip(.sneak,     CatAnimationConfig.Sneak.frameCount,         CatAnimationConfig.Sneak.frameDurations),
+            run:       strip(.run,       CatAnimationConfig.Run.frameCount,           CatAnimationConfig.Run.frameDurations),
+            dash:      strip(.dash,      CatAnimationConfig.Dash.frameCount,          CatAnimationConfig.Dash.frameDurations),
+            crouch:    strip(.crouch,    CatAnimationConfig.Crouch.frameCount,        CatAnimationConfig.Crouch.frameDurations),
+            sit:       strip(.sit,       CatAnimationConfig.Sit.frameCount,           CatAnimationConfig.Sit.frameDurations),
+            lieDown:   strip(.lieDown,   CatAnimationConfig.LieDown.frameCount,       CatAnimationConfig.LieDown.frameDurations),
+            sleep:     strip(.sleep,     CatAnimationConfig.Sleep.frameCount,         CatAnimationConfig.Sleep.frameDurations),
+            attack:    strip(.attack,    CatAnimationConfig.Attack.frameCount,        CatAnimationConfig.Attack.frameDurations),
+            fright:    strip(.fright,    CatAnimationConfig.Fright.frameCount,        CatAnimationConfig.Fright.frameDurations),
+            jump:      strip(.jump,      CatAnimationConfig.Aerial.Jump.frameCount,   CatAnimationConfig.Aerial.Jump.frameDurations),
+            fall:      strip(.fall,      CatAnimationConfig.Aerial.Fall.frameCount,   CatAnimationConfig.Aerial.Fall.frameDurations),
+            land:      strip(.land,      CatAnimationConfig.Aerial.Land.frameCount,   CatAnimationConfig.Aerial.Land.frameDurations),
+            wallGrab:  strip(.wallGrab,  CatAnimationConfig.WallGrab.frameCount,      CatAnimationConfig.WallGrab.frameDurations),
+            wallClimb: strip(.wallClimb, CatAnimationConfig.WallClimb.frameCount,     CatAnimationConfig.WallClimb.frameDurations)
         )
-    }()
-
-    /// Single blink cycle — layered into idle as a variation.
-    static let idleBlink: CatAnimationClip = {
-        CatAnimationClip(
-            name: "idleBlink",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Idle.Blink.asset,
-                frameCount: CatAnimationConfig.Idle.Blink.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Idle.Blink.frameDurations
-        )
-    }()
-
-    /// Walk cycle — sprite faces right by default; flip horizontally for leftward movement.
-    static let walk: CatAnimationClip = {
-        CatAnimationClip(
-            name: "walk",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Walk.asset,
-                frameCount: CatAnimationConfig.Walk.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Walk.frameDurations
-        )
-    }()
-
-    /// Sneak cycle — low-profile crawl used for calm, deliberate movement.
-    static let sneak: CatAnimationClip = {
-        CatAnimationClip(
-            name: "sneak",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Sneak.asset,
-                frameCount: CatAnimationConfig.Sneak.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Sneak.frameDurations
-        )
-    }()
-
-    /// Jump launch — one-shot takeoff clip for short hops.
-    static let jump: CatAnimationClip = {
-        CatAnimationClip(
-            name: "jump",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Aerial.Jump.asset,
-                frameCount: CatAnimationConfig.Aerial.Jump.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Aerial.Jump.frameDurations
-        )
-    }()
-
-    /// Fall descent — brief airborne bridge between launch and landing.
-    static let fall: CatAnimationClip = {
-        CatAnimationClip(
-            name: "fall",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Aerial.Fall.asset,
-                frameCount: CatAnimationConfig.Aerial.Fall.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Aerial.Fall.frameDurations
-        )
-    }()
-
-    /// Land recovery — one-shot touchdown that resolves back to grounded behavior.
-    static let land: CatAnimationClip = {
-        CatAnimationClip(
-            name: "land",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Aerial.Land.asset,
-                frameCount: CatAnimationConfig.Aerial.Land.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Aerial.Land.frameDurations
-        )
-    }()
-
-    /// Run cycle — higher-energy locomotion burst.
-    static let run: CatAnimationClip = {
-        CatAnimationClip(
-            name: "run",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Run.asset,
-                frameCount: CatAnimationConfig.Run.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Run.frameDurations
-        )
-    }()
-
-    /// Dash burst — ultra-short, one-shot zoomie clip.
-    static let dash: CatAnimationClip = {
-        CatAnimationClip(
-            name: "dash",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Dash.asset,
-                frameCount: CatAnimationConfig.Dash.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Dash.frameDurations
-        )
-    }()
-
-    /// Crouch posture — compressed low-to-the-ground calm state.
-    static let crouch: CatAnimationClip = {
-        CatAnimationClip(
-            name: "crouch",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Crouch.asset,
-                frameCount: CatAnimationConfig.Crouch.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Crouch.frameDurations
-        )
-    }()
-
-    /// Sit cycle — temporary resting behavior.
-    static let sit: CatAnimationClip = {
-        CatAnimationClip(
-            name: "sit",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Sit.asset,
-                frameCount: CatAnimationConfig.Sit.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Sit.frameDurations
-        )
-    }()
-
-    /// Lie-down transition — played once, then held briefly by behavior logic.
-    static let lieDown: CatAnimationClip = {
-        CatAnimationClip(
-            name: "lieDown",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.LieDown.asset,
-                frameCount: CatAnimationConfig.LieDown.frameCount
-            ),
-            frameDurations: CatAnimationConfig.LieDown.frameDurations
-        )
-    }()
-
-    /// Sleep cycle — looping rest state.
-    static let sleep: CatAnimationClip = {
-        CatAnimationClip(
-            name: "sleep",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Sleep.asset,
-                frameCount: CatAnimationConfig.Sleep.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Sleep.frameDurations
-        )
-    }()
-
-    /// Playful strike — one-shot pounce/swat flourish.
-    static let attack: CatAnimationClip = {
-        CatAnimationClip(
-            name: "attack",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Attack.asset,
-                frameCount: CatAnimationConfig.Attack.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Attack.frameDurations
-        )
-    }()
-
-    /// Startled reaction — one-shot fright/recoil state.
-    static let fright: CatAnimationClip = {
-        CatAnimationClip(
-            name: "fright",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.Fright.asset,
-                frameCount: CatAnimationConfig.Fright.frameCount
-            ),
-            frameDurations: CatAnimationConfig.Fright.frameDurations
-        )
-    }()
-
-    /// Wall cling — brief hold state when the cat grips a vertical screen edge.
-    static let wallGrab: CatAnimationClip = {
-        CatAnimationClip(
-            name: "wallGrab",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.WallGrab.asset,
-                frameCount: CatAnimationConfig.WallGrab.frameCount
-            ),
-            frameDurations: CatAnimationConfig.WallGrab.frameDurations
-        )
-    }()
-
-    /// Wall climb — active upward movement along a vertical screen edge.
-    static let wallClimb: CatAnimationClip = {
-        CatAnimationClip(
-            name: "wallClimb",
-            frames: CatSpriteLoader.loadStrip(
-                asset:CatAnimationConfig.WallClimb.asset,
-                frameCount: CatAnimationConfig.WallClimb.frameCount
-            ),
-            frameDurations: CatAnimationConfig.WallClimb.frameDurations
-        )
-    }()
+    }
 }

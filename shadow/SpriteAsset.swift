@@ -1,23 +1,27 @@
-/// Compile-time registry of every sprite strip PNG bundled with the app.
+/// Compile-time registry of every animation type, independent of cat color.
 ///
-/// Using an enum instead of raw strings means a renamed or missing asset is
-/// caught at compile time rather than silently producing an empty clip at runtime.
+/// Raw values are the animation portion of the filename (e.g. "idle_strip8").
+/// Call `fileName(for:)` to get the full PNG name for a specific variant.
 enum SpriteAsset: String {
-    case idle         = "cat05_idle_strip8"
-    case idleBlink    = "cat05_idle_blink_strip8"
-    case walk         = "cat05_walk_strip8"
-    case sneak        = "cat05_sneak_strip8"
-    case run          = "cat05_run_strip4"
-    case dash         = "cat05_dash_strip9"
-    case crouch       = "cat05_crouch_strip8"
-    case sit          = "cat05_sit_strip8"
-    case lieDown      = "cat05_liedown_strip24"
-    case sleep        = "cat05_sleep_strip8"
-    case attack       = "cat05_attack_strip7"
-    case fright       = "cat05_fright_strip8"
-    case jump         = "cat05_jump_strip4"
-    case fall         = "cat05_fall_strip3"
-    case land         = "cat05_land_strip2"
-    case wallGrab     = "cat05_wallgrab_strip8"
-    case wallClimb    = "cat05_wallclimb_strip8"
+    case idle         = "idle_strip8"
+    case idleBlink    = "idle_blink_strip8"
+    case walk         = "walk_strip8"
+    case sneak        = "sneak_strip8"
+    case run          = "run_strip4"
+    case dash         = "dash_strip9"
+    case crouch       = "crouch_strip8"
+    case sit          = "sit_strip8"
+    case lieDown      = "liedown_strip24"
+    case sleep        = "sleep_strip8"
+    case attack       = "attack_strip7"
+    case fright       = "fright_strip8"
+    case jump         = "jump_strip4"
+    case fall         = "fall_strip3"
+    case land         = "land_strip2"
+    case wallGrab     = "wallgrab_strip8"
+    case wallClimb    = "wallclimb_strip8"
+
+    func fileName(for variant: CatVariant) -> String {
+        "cat\(variant.rawValue)_\(rawValue)"
+    }
 }

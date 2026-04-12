@@ -11,6 +11,9 @@ protocol CatBehaviorContext: AnyObject {
     /// The animation player used for frame-by-frame playback.
     var player: AnimationPlayer { get }
 
+    /// The full set of animation clips for the current cat variant.
+    var clips: CatClips { get }
+
     /// Updates the visual frame shown to the user.
     func updateFrame(_ image: NSImage?)
 

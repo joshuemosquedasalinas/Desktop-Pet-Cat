@@ -12,7 +12,7 @@ enum RestBehaviors {
         for _ in 0..<cycles {
             guard !Task.isCancelled else { return }
 
-            await context.player.playClip(.idle)
+            await context.player.playClip(context.clips.idle)
             guard !Task.isCancelled else { return }
 
             if await context.reactToNearbyMouseIfNeeded() {
@@ -25,7 +25,7 @@ enum RestBehaviors {
             try? await Task.sleep(for: .seconds(pause))
 
             if Double.random(in: 0..<1) < CatAnimationConfig.Idle.blinkVariationChance {
-                await context.player.playClip(.idleBlink)
+                await context.player.playClip(context.clips.idleBlink)
                 guard !Task.isCancelled else { return }
                 if await context.reactToNearbyMouseIfNeeded() {
                     return
@@ -41,7 +41,7 @@ enum RestBehaviors {
 
         for _ in 0..<cycles {
             guard !Task.isCancelled else { return }
-            await context.player.playClip(.sit)
+            await context.player.playClip(context.clips.sit)
             guard !Task.isCancelled else { return }
 
             if await context.reactToNearbyMouseIfNeeded() {
@@ -58,7 +58,7 @@ enum RestBehaviors {
             await onTransition(.lieDown)
         } else {
             if Double.random(in: 0..<1) < CatAnimationConfig.Idle.blinkVariationChance {
-                await context.player.playClip(.idleBlink)
+                await context.player.playClip(context.clips.idleBlink)
             }
             context.settleToIdle()
         }
@@ -67,7 +67,7 @@ enum RestBehaviors {
     @MainActor
     static func runLieDownPhase(context: CatBehaviorContext, onTransition: (CatBehaviorRequest) async -> Void) async {
         context.updateState(.lieDown)
-        await context.player.playClip(.lieDown, frames: CatAnimationConfig.LieDown.activeRange)
+        await context.player.playClip(context.clips.lieDown, frames: CatAnimationConfig.LieDown.activeRange)
         guard !Task.isCancelled else { return }
 
         let restDuration = TimeInterval.random(
@@ -102,7 +102,7 @@ enum RestBehaviors {
             context.updateState(.sit)
             for _ in 0..<CatAnimationConfig.LieDown.exitSitCycles {
                 guard !Task.isCancelled else { break }
-                await context.player.playClip(.sit)
+                await context.player.playClip(context.clips.sit)
             }
             context.settleToIdle()
         }
@@ -120,10 +120,10 @@ enum RestBehaviors {
             context.updateFacingRight(preferredFacingRight)
         }
 
-        await context.player.playClip(.crouch)
+        await context.player.playClip(context.clips.crouch)
         guard !Task.isCancelled else { return }
 
-        context.updateFrame(CatAnimationClip.crouch.frames.last)
+        context.updateFrame(context.clips.crouch.frames.last)
         let holdDuration = TimeInterval.random(
             in: CatAnimationConfig.Crouch.holdMin...CatAnimationConfig.Crouch.holdMax
         )
@@ -161,18 +161,18 @@ enum RestBehaviors {
         let deadline = Date().addingTimeInterval(sleepDuration)
 
         while !Task.isCancelled, Date() < deadline {
-            await context.player.playClip(.sleep)
+            await context.player.playClip(context.clips.sleep)
         }
 
         guard !Task.isCancelled else { return }
 
-        context.updateFrame(CatAnimationClip.sleep.frames.last)
+        context.updateFrame(context.clips.sleep.frames.last)
         try? await Task.sleep(for: .seconds(0.6))
 
         context.updateState(.sit)
         for _ in 0..<CatAnimationConfig.LieDown.exitSitCycles {
             guard !Task.isCancelled else { break }
-            await context.player.playClip(.sit)
+            await context.player.playClip(context.clips.sit)
         }
 
         context.settleToIdle()
@@ -181,7 +181,7 @@ enum RestBehaviors {
     @MainActor
     static func runAttackPhase(context: CatBehaviorContext, onTransition: (CatBehaviorRequest) async -> Void) async {
         context.updateState(.attack)
-        await context.player.playClip(.attack)
+        await context.player.playClip(context.clips.attack)
         guard !Task.isCancelled else { return }
 
         let roll = Double.random(in: 0..<1)
@@ -201,10 +201,10 @@ enum RestBehaviors {
     @MainActor
     static func runFrightPhase(context: CatBehaviorContext, onTransition: (CatBehaviorRequest) async -> Void) async {
         context.updateState(.fright)
-        await context.player.playClip(.fright)
+        await context.player.playClip(context.clips.fright)
         guard !Task.isCancelled else { return }
 
-        context.updateFrame(CatAnimationClip.fright.frames.last)
+        context.updateFrame(context.clips.fright.frames.last)
         let hold = TimeInterval.random(in: CatAnimationConfig.Fright.holdMin...CatAnimationConfig.Fright.holdMax)
         try? await Task.sleep(for: .seconds(hold))
         guard !Task.isCancelled else { return }
@@ -225,7 +225,7 @@ enum RestBehaviors {
 
     @MainActor
     private static func playRestLoop(context: CatBehaviorContext) async {
-        let clip = CatAnimationClip.lieDown
+        let clip = context.clips.lieDown
         let pattern = lieDownRestPatterns.randomElement() ?? []
 
         for index in pattern {
